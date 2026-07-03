@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Host Admin | Orion Managed Services</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+    extend: {
+        colors: {
+        "on-surface-variant": "#c1c6d7",
+        "surface-container-highest": "#353436",
+        "primary-container": "#4b8eff",
+        "on-surface": "#e5e2e3",
+        "surface-container-lowest": "#0e0e0f",
+        "tertiary": "#00dbe9",
+        "secondary-container": "#2ff801",
+        "surface-container-low": "#1c1b1c",
+        "secondary": "#d7ffc5",
+        "outline-variant": "#414755",
+        "primary": "#adc6ff",
+        "surface-container": "#201f20",
+        "background": "#131314",
+        "surface-container-high": "#2a2a2b",
+        },
+        fontFamily: {
+        "headline": ["Space Grotesk"],
+        "body": ["Inter"],
+        },
+    },
+    },
+}
+</script>
+<style>
+.glass-panel { background: rgba(42, 42, 43, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+.text-glow-primary { text-shadow: 0 0 15px rgba(173, 198, 255, 0.4); }
+.text-glow-green { text-shadow: 0 0 15px rgba(47, 248, 1, 0.4); }
+#dragZone.dragover { border-color: #adc6ff; background-color: rgba(173, 198, 255, 0.1); }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-up { animation: fadeUp 0.4s ease-out forwards; }
+select option { background: #201f20; color: #e5e2e3; }
+</style>
+<link href="main.css" rel="stylesheet"/>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30" id="pageBody">
+
+<!-- Navbar -->
+<nav class="fixed top-0 w-full z-50 bg-[#131314]/80 backdrop-blur-xl border-b border-[#ffffff10] shadow-2xl">
+    <div class="flex justify-between items-center px-8 py-4 max-w-[1440px] mx-auto">
+        <div class="flex items-center gap-6">
+            <img src="company-logo.png" alt="Company Logo" class="h-16 w-auto object-contain opacity-100 drop-shadow-lg">
+            <div class="hidden sm:block border-l border-white/10 pl-4 ml-2">
+                <p class="text-[11px] text-on-surface-variant font-bold tracking-widest uppercase flex items-center gap-3">
+                    <span class="text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">admin_panel_settings</span> ID: ADMIN</span>
+                    <span class="opacity-50">|</span>
+                    <span id="headerClock" class="font-mono flex items-center gap-1"></span>
+                </p>
+                <div class="text-2xl font-black tracking-tighter text-[#adc6ff] font-['Space_Grotesk'] mt-0.5">Host Center</div>
+            </div>
+        </div>
+        <button id="logoutBtn" class="bg-surface-container-highest border border-outline-variant/30 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-900/30 hover:text-red-400 hover:border-red-500/30 transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">logout</span> Desconectar
+        </button>
+    </div>
+</nav>
+
+<main class="w-full min-h-screen pt-32 pb-16 px-8 max-w-[1440px] mx-auto">
+    <header class="mb-10">
+        <div>
+            <span class="inline-block text-red-400 text-xs font-bold tracking-[0.2em] uppercase mb-2">Acceso Crítico Reservado</span>
+            <h1 class="text-4xl md:text-5xl font-headline font-bold tracking-tight text-white mb-2">
+                Central de <span class="text-primary text-glow-primary">Gestión de Alertas</span>
+            </h1>
+            <p class="text-on-surface-variant max-w-2xl">Panel de administración global. Selecciona la empresa, el periodo del informe, y sube el archivo TXT exportado del sistema de monitoreo.</p>
+        </div>
+    </header>
+
+    <!-- Step 1: Configuration -->
+    <div class="glass-panel p-8 rounded-2xl border border-outline-variant/20 mb-8">
+        <h3 class="text-xl font-bold font-headline text-white mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-tertiary">tune</span> Paso 1 — Configuración del Informe
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <!-- Company Selector -->
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest font-bold text-on-surface-variant mb-2">
+                    <span class="material-symbols-outlined text-xs align-middle mr-1">business</span> Empresa Destinataria
+                </label>
+                <select id="companySelect" class="w-full bg-surface-container-high border border-outline-variant/30 text-white rounded-lg focus:ring-primary focus:border-primary p-3 outline-none">
+                    <option value="">— Seleccionar empresa —</option>
+                    <option value="ACME">Acme Corp</option>
+                    <option value="GLOBEX">Globex Industries</option>
+                    <option value="INITECH">Initech Solutions</option>
+                    <option value="UMBRELLA">Umbrella Group</option>
+                    <option value="STARK">Stark Logistics</option>
+                </select>
+            </div>
+            <!-- Date From -->
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest font-bold text-on-surface-variant mb-2">
+                    <span class="material-symbols-outlined text-xs align-middle mr-1">calendar_today</span> Fecha Desde
+                </label>
+                <input type="date" id="dateFrom" class="w-full bg-surface-container-high border border-outline-variant/30 text-white rounded-lg focus:ring-primary focus:border-primary p-3 outline-none" />
+            </div>
+            <!-- Date To -->
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest font-bold text-on-surface-variant mb-2">
+                    <span class="material-symbols-outlined text-xs align-middle mr-1">event</span> Fecha Hasta
+                </label>
+                <input type="date" id="dateTo" class="w-full bg-surface-container-high border border-outline-variant/30 text-white rounded-lg focus:ring-primary focus:border-primary p-3 outline-none" />
+            </div>
+            <!-- Monitored Devices -->
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest font-bold text-on-surface-variant mb-2" title="Total real de dispositivos que se están monitorizando, ingresado manualmente.">
+                    <span class="material-symbols-outlined text-xs align-middle mr-1">dns</span> Disp. Monitorizados
+                </label>
+                <input type="number" id="totalMonitoredDevices" placeholder="Ej: 350" min="0" class="w-full bg-surface-container-high border border-outline-variant/30 text-white rounded-lg focus:ring-primary focus:border-primary p-3 outline-none" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Upload -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Upload Zone -->
+        <div class="glass-panel p-8 rounded-2xl border border-outline-variant/20 flex flex-col">
+            <h3 class="text-xl font-bold font-headline text-white mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">cloud_upload</span> Paso 2 — Subir Archivo TXT
+            </h3>
+            <p class="text-xs text-on-surface-variant mb-6">Arrastra o selecciona el archivo <code class="text-primary">.txt</code> exportado del sistema de monitoreo (ej. Centreon) para procesar las alertas.</p>
+
+            <div id="dragZone" class="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-outline-variant/40 rounded-xl p-8 text-center transition-all min-h-[250px] group cursor-pointer">
+                <span class="material-symbols-outlined text-6xl text-outline-variant group-hover:text-primary transition-colors mb-4">note_add</span>
+                <p class="text-white font-bold mb-1">Arrastra tu archivo .TXT aquí</p>
+                <p class="text-on-surface-variant text-xs">o haz clic para explorar en el sistema</p>
+                <input type="file" id="fileInput" class="hidden" accept=".txt,.csv" />
+            </div>
+
+            <!-- Processing Status -->
+            <div id="uploadStatus" class="hidden mt-6 bg-surface-container-highest border border-primary/30 p-4 rounded-lg flex items-center gap-4">
+                <span class="material-symbols-outlined text-primary animate-spin">progress_activity</span>
+                <div class="flex-1">
+                    <p class="text-sm text-white font-bold" id="uploadText">Procesando archivo...</p>
+                    <div class="w-full bg-surface-container-lowest rounded-full h-1.5 mt-2 overflow-hidden">
+                        <div class="bg-primary h-1.5 rounded-full animate-pulse" id="uploadProgress" style="width:66%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Status -->
+            <div id="errorStatus" class="hidden mt-6 bg-red-900/20 border border-red-500/30 p-4 rounded-lg flex items-start gap-4">
+                <span class="material-symbols-outlined text-red-400">error</span>
+                <div>
+                    <p class="text-sm text-white font-bold">Error al Procesar</p>
+                    <p class="text-xs text-red-300 mt-1" id="errorText"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Client Panel -->
+        <div class="glass-panel p-8 rounded-2xl border border-outline-variant/20 flex flex-col">
+            <h3 class="text-xl font-bold font-headline text-white mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">corporate_fare</span> Empresas Registradas
+            </h3>
+            <p class="text-xs text-on-surface-variant mb-6">Clientes activos con acceso al Portal de Monitoreo.</p>
+
+            <div class="space-y-3" id="companyList">
+                <!-- Generated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SUMMARY PREVIEW (Hidden until file parsed)  -->
+    <!-- ============================================ -->
+    <div id="summarySection" class="hidden animate-fade-up">
+        <!-- Selected Company Banner -->
+        <div class="glass-panel p-4 rounded-xl border border-tertiary/30 mb-6 flex items-center gap-4">
+            <span class="material-symbols-outlined text-tertiary text-2xl">business</span>
+            <div>
+                <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Informe Destinado a</p>
+                <p class="text-xl font-headline font-bold text-white" id="sumCompany">-</p>
+            </div>
+            <div class="ml-auto text-right">
+                <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Período</p>
+                <p class="text-lg font-headline font-bold text-tertiary" id="sumDateRange">-</p>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="glass-panel p-6 rounded-xl border border-outline-variant/10 hover:border-primary/50 transition-colors">
+                <div class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-primary">warning</span> Total Alertas
+                </div>
+                <div class="text-4xl font-headline font-bold text-white text-glow-primary" id="sumTotal">0</div>
+            </div>
+            <div class="glass-panel p-6 rounded-xl border border-outline-variant/10 hover:border-secondary/50 transition-colors">
+                <div class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-secondary">memory</span> Dispositivos
+                </div>
+                <div class="text-4xl font-headline font-bold text-secondary" id="sumDevices">0</div>
+            </div>
+            <div class="glass-panel p-6 rounded-xl border border-outline-variant/10 hover:border-tertiary/50 transition-colors">
+                <div class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-tertiary">calendar_month</span> Periodo
+                </div>
+                <div class="text-2xl font-headline font-bold text-white" id="sumPeriod">-</div>
+            </div>
+            <div class="glass-panel p-6 rounded-xl border border-outline-variant/10 hover:border-red-400/50 transition-colors">
+                <div class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-red-400">priority_high</span> Dispositivo Crítico
+                </div>
+                <div class="text-2xl font-headline font-bold text-white truncate" id="sumTopDevice">-</div>
+            </div>
+        </div>
+
+        <!-- TOP 10 Preview Table -->
+        <div class="glass-panel p-6 rounded-2xl border border-outline-variant/20 mb-8">
+            <h3 class="text-xl font-bold font-headline text-white mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">leaderboard</span> Vista Previa — TOP 10 Dispositivos
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-on-surface-variant">
+                    <thead class="text-[10px] text-primary uppercase bg-surface-container-highest/80">
+                        <tr>
+                            <th class="px-4 py-3 rounded-tl-lg">#</th>
+                            <th class="px-4 py-3">Object Name</th>
+                            <th class="px-4 py-3 text-right">Cuenta (Alertas)</th>
+                            <th class="px-4 py-3 text-right rounded-tr-lg">% del Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="previewTableBody" class="divide-y divide-outline-variant/10">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4">
+            <button id="btnGenerateReport" class="flex-1 bg-gradient-to-r from-primary to-primary-container text-[#002e69] hover:from-white hover:to-primary hover:text-[#001a41] font-bold rounded-xl px-8 py-4 text-sm uppercase tracking-wider transition-all flex justify-center items-center gap-3 shadow-[0_0_20px_rgba(173,198,255,0.2)] hover:shadow-[0_0_35px_rgba(173,198,255,0.4)]">
+                <span class="material-symbols-outlined">dashboard</span>
+                Generar Informe y Abrir Dashboard
+            </button>
+            <button id="btnSaveToServer" class="bg-secondary/20 border border-secondary/30 text-secondary px-6 py-4 rounded-xl text-sm font-bold hover:bg-secondary/30 transition-all flex items-center justify-center gap-3">
+                <span class="material-symbols-outlined">cloud_done</span>
+                Guardar en Servidor
+            </button>
+            <button id="btnDownloadJSON" class="bg-surface-container-highest border border-outline-variant/30 text-white px-6 py-4 rounded-xl text-sm font-bold hover:bg-surface-container-high transition-all flex items-center justify-center gap-3">
+                <span class="material-symbols-outlined">download</span>
+                Descargar JSON
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- REPORT HISTORY SECTION                       -->
+    <!-- ============================================ -->
+    <div class="mt-8 glass-panel p-6 rounded-xl border border-outline-variant/10">
+        <h3 class="text-xl font-bold font-headline text-white mb-2 flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary">history</span> Historial de Informes en Servidor
+        </h3>
+        <p class="text-xs text-on-surface-variant mb-6 border-b border-white/5 pb-4">Actualmente procesados y alojados en la nube. Puedes eliminar informes subidos por error.</p>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-on-surface-variant">
+                <thead class="text-[10px] text-primary uppercase bg-surface-container-highest/80">
+                    <tr>
+                        <th class="px-4 py-3 rounded-tl-lg">Fecha Subida</th>
+                        <th class="px-4 py-3">Empresa</th>
+                        <th class="px-4 py-3">Periodo</th>
+                        <th class="px-4 py-3">Total Alertas</th>
+                        <th class="px-4 py-3 text-center">Disp. Monit.</th>
+                        <th class="px-4 py-3 text-right">Autor</th>
+                        <th class="px-4 py-3 text-center rounded-tr-lg">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="reportsHistoryBody" class="divide-y divide-outline-variant/10">
+                    <tr><td colspan="7" class="text-center py-4">Cargando historial...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<!-- Modal Edición Dispositivos -->
+<div id="modalEditDevices" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="bg-surface-container-high rounded-xl p-6 border border-outline-variant/30 text-center max-w-sm mx-4 transform transition-all shadow-2xl w-full">
+        <span class="material-symbols-outlined text-4xl text-primary mb-4">edit_square</span>
+        <h3 class="text-xl font-headline font-bold text-white mb-2">Editar Dispositivos</h3>
+        <p class="text-sm text-on-surface-variant mb-6">Actualiza el total de dispositivos monitorizados para este informe histórico.</p>
+        <input type="hidden" id="editReportId" />
+        <div class="mb-6 text-left">
+            <label class="block text-[10px] uppercase tracking-widest font-bold text-on-surface-variant mb-2">
+                <span class="material-symbols-outlined text-xs align-middle mr-1">dns</span> Total Disp. Monitorizados
+            </label>
+            <input type="number" id="editTotalMonitored" min="0" placeholder="Ej: 350" class="w-full bg-surface-container-lowest border border-outline-variant/30 text-white rounded-lg focus:ring-primary focus:border-primary p-3 outline-none" />
+        </div>
+        <div class="flex flex-col gap-3">
+            <button id="btnSaveEditDevices" class="w-full py-2 bg-primary/10 text-primary border border-primary/30 font-bold rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"><span class="material-symbols-outlined text-sm">save</span> Guardar Cambios</button>
+            <button onclick="document.getElementById('modalEditDevices').classList.add('hidden');document.getElementById('modalEditDevices').classList.remove('flex');" class="w-full py-2 text-on-surface-variant hover:text-white transition-colors border border-outline-variant/30 rounded-lg">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmación Sobreescribir -->
+<div id="modalOverwrite" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="bg-surface-container-high rounded-xl p-6 border border-outline-variant/30 text-center max-w-sm mx-4 transform transition-all shadow-2xl">
+        <span class="material-symbols-outlined text-4xl text-[#ffc107] mb-4">warning</span>
+        <h3 class="text-xl font-headline font-bold text-white mb-2">Informe Existente</h3>
+        <p class="text-sm text-on-surface-variant mb-6">Ya existe un informe para esta empresa en el periodo seleccionado. ¿Deseas sobreescribir el archivo actual o anexar/sumar las nuevas alertas al informe existente?</p>
+        <div class="flex flex-col gap-3">
+            <button id="btnAppend" class="w-full py-2 bg-[#2ff801]/10 text-[#2ff801] border border-[#2ff801]/30 font-bold rounded-lg hover:bg-[#2ff801]/20 transition-colors">Anexar (Sumar Datos)</button>
+            <button id="btnOverwrite" class="w-full py-2 bg-primary/10 text-primary border border-primary/30 font-bold rounded-lg hover:bg-primary/20 transition-colors">Sobreescribir Archivo</button>
+            <button id="btnCancelModal" class="w-full py-2 text-on-surface-variant hover:text-white transition-colors border border-outline-variant/30 rounded-lg">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>

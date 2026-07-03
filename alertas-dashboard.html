@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard de Alertas | Orion Managed Services</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+    extend: {
+        colors: {
+        "on-surface-variant": "#c1c6d7",
+        "surface-container-highest": "#353436",
+        "primary-container": "#4b8eff",
+        "on-surface": "#e5e2e3",
+        "surface-container-lowest": "#0e0e0f",
+        "tertiary": "#00dbe9",
+        "secondary-container": "#2ff801",
+        "surface-container-low": "#1c1b1c",
+        "secondary": "#d7ffc5",
+        "outline-variant": "#414755",
+        "primary": "#adc6ff",
+        "surface-container": "#201f20",
+        "background": "#131314",
+        "surface-container-high": "#2a2a2b",
+        },
+        fontFamily: {
+        "headline": ["Space Grotesk"],
+        "body": ["Inter"],
+        },
+    },
+    },
+}
+</script>
+<style>
+.glass-panel { background: rgba(42, 42, 43, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+.text-glow-primary { text-shadow: 0 0 15px rgba(173, 198, 255, 0.4); }
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(173, 198, 255, 0.3); border-radius: 10px; }
+select option { background: #201f20; color: #e5e2e3; }
+
+@media print {
+    body { background: #131314 !important; background-color: #131314 !important; -webkit-print-color-adjust: exact; color-adjust: exact; print-color-adjust: exact; }
+    nav, #reportPicker, label[for="reportPicker"], #btnDownloadPDF, #btnDownloadCSV { display: none !important; }
+    main { padding-top: 0 !important; margin-top: 0 !important; }
+    .glass-panel { border: 1px solid #414755 !important; page-break-inside: avoid; }
+    #drilldownSection { max-height: none !important; height: auto !important; overflow: visible !important; }
+    .custom-scrollbar, .overflow-y-auto { overflow: visible !important; max-height: none !important; }
+}
+</style>
+<link href="main.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Librerías de Exportación Avanzada -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30">
+
+<!-- Navbar -->
+<nav class="fixed top-0 w-full z-50 bg-[#131314]/80 backdrop-blur-xl border-b border-[#ffffff10] shadow-2xl">
+    <div class="flex justify-between items-center px-8 py-4 max-w-[1440px] mx-auto">
+        <div class="flex items-center gap-6">
+            <img src="company-logo.png" alt="Company Logo" class="h-16 w-auto object-contain opacity-100 drop-shadow-lg">
+            <div class="hidden sm:block">
+                <p class="text-[11px] text-on-surface-variant font-bold tracking-widest uppercase flex items-center gap-3">
+                    <span class="text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">badge</span> ID: <span id="headerClientId">-</span></span>
+                    <span class="opacity-50">|</span>
+                    <span id="headerClock" class="font-mono flex items-center gap-1"></span>
+                </p>
+                <div class="text-lg font-black tracking-tighter text-white font-['Space_Grotesk'] mt-0.5">Alerts Dashboard</div>
+            </div>
+        </div>
+        <div class="hidden md:flex items-center space-x-8">
+            <span class="text-tertiary font-bold" id="companyInfo">-</span>
+            <span class="text-[#d7ffc5] hover:text-white transition-colors font-bold">Portal Clientes</span>
+        </div>
+        <button onclick="localStorage.removeItem('itm_portal_user');localStorage.removeItem('itm_report_data');indexedDB.deleteDatabase('ITMonitorDB');window.location.href='login.html'" class="bg-surface-container-highest border border-outline-variant/30 text-white px-4 py-2 rounded-lg font-bold hover:bg-white/10 transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">account_circle</span> Cerrar Sesión
+        </button>
+    </div>
+</nav>
+
+<main class="w-full min-h-screen pt-32 pb-16 px-8 max-w-[1440px] mx-auto">
+    <!-- Header and Filters -->
+    <header class="mb-10 flex flex-col md:flex-row md:justify-between md:items-end gap-6">
+        <div>
+            <span class="inline-block text-secondary text-xs font-bold tracking-[0.2em] uppercase mb-2">Portal de Clientes Privado</span>
+            <h1 class="text-4xl md:text-5xl font-headline font-bold tracking-tight text-white mb-2">
+                Reporte de <span class="text-primary text-glow-primary">Alertas de Monitoreo</span>
+            </h1>
+            <p class="text-on-surface-variant max-w-2xl">Visualización interactiva de la infraestructura de TI y sistemas críticos. Los datos se actualizan automáticamente en base al último envío.</p>
+        </div>
+
+        <!-- Report History Picker -->
+        <div class="glass-panel px-6 py-4 rounded-xl border border-outline-variant/20 flex flex-wrap lg:flex-nowrap items-center gap-4 w-full md:w-auto">
+            <span class="material-symbols-outlined text-primary text-3xl">history</span>
+            <div class="w-full flex-1">
+                <label class="block text-[10px] uppercase font-bold text-on-surface-variant tracking-wider mb-1">Historial de Informes</label>
+                <select id="reportPicker" class="bg-surface-container text-white text-sm font-bold rounded-lg border border-outline-variant/30 focus:ring-primary focus:border-primary block w-full p-2 outline-none cursor-pointer">
+                    <option value="">Cargando informes...</option>
+                </select>
+            </div>
+
+            <div class="flex items-center gap-2 border-l border-outline-variant/30 pl-4 ml-2">
+                <button id="btnDownloadPDF" title="Exportar Vista a PDF" class="bg-primary/10 hover:bg-primary/30 text-primary h-10 w-10 flex items-center justify-center rounded-lg transition border border-primary/20">
+                    <span class="material-symbols-outlined text-[20px]">print</span>
+                </button>
+                <button id="btnDownloadCSV" title="Descargar Detalles en Excel (CSV)" class="bg-secondary/10 hover:bg-secondary/30 text-secondary h-10 w-10 flex items-center justify-center rounded-lg transition border border-secondary/20">
+                    <span class="material-symbols-outlined text-[20px]">download</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- KPI Summary Cards (4 columns) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="glass-panel p-6 rounded-xl border border-outline-variant/10 hover:border-primary/50 transition-colors">
+            <div class="text-on-surface-variant text-xs uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm text-primary">warning</span> <span id="titleKpiTotal">Total de Alertas</span>
+            </div>
+            <div class="text-4xl md:text-5xl font-headline font-bold text-white text-glow-primary" id="kpiTotal">0</div>
+        </div>
+        <div class="glass-panel p-6 rounded-xl border border-outline-variant/10 hover:border-secondary/50 transition-colors">
+            <div class="text-on-surface-variant text-xs uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm text-secondary">memory</span> <span id="titleKpiDevices">Disp. Afectados</span>
+            </div>
+            <div class="text-4xl md:text-5xl font-headline font-bold text-secondary" id="kpiDevices">0</div>
+        </div>
+        <div class="glass-panel p-6 rounded-xl border border-outline-variant/10 hover:border-tertiary/50 transition-colors">
+            <div class="text-on-surface-variant text-xs uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm text-tertiary">dns</span> Disp. Monitorizados
+            </div>
+            <div class="text-4xl md:text-5xl font-headline font-bold text-tertiary" id="kpiMonitored">0</div>
+        </div>
+        <div class="glass-panel p-6 rounded-xl border border-outline-variant/10 hover:border-red-400/50 transition-colors">
+            <div class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest mb-2 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm text-red-400">priority_high</span> Principal Crítico
+            </div>
+            <div class="text-3xl font-headline font-bold text-white truncate" id="kpiTopDevice">-</div>
+        </div>
+    </div>
+
+    <!-- Charts Section: Donut (left) + TOP 10 Pie+Table (right) — ORIGINAL LAYOUT -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- Todas las Alertas (Donut Chart & Bars) -->
+        <div class="lg:col-span-4 glass-panel p-6 rounded-xl border border-outline-variant/10 relative flex flex-col h-[750px]">
+            <div class="mb-4">
+                <h3 class="text-xl font-bold font-headline text-white mb-2" id="leftChartTitle">Alertas CRITICAL</h3>
+                <p class="text-xs text-on-surface-variant mb-4">Proporción general filtrada en base a la severidad elegida.</p>
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-2 mb-2" id="severityFilters">
+                    <button class="filter-btn active bg-red-400 text-red-900 font-bold px-3 py-1 rounded-full text-[10px] uppercase" data-filter="CRITICAL">Critical</button>
+                    <button class="filter-btn bg-surface-container-highest text-on-surface-variant hover:bg-orange-400/20 hover:text-orange-400 font-bold px-3 py-1 rounded-full text-[10px] uppercase border border-outline-variant/50" data-filter="ERROR">Error</button>
+                    <button class="filter-btn bg-surface-container-highest text-on-surface-variant hover:bg-purple-400/20 hover:text-purple-400 font-bold px-3 py-1 rounded-full text-[10px] uppercase border border-outline-variant/50" data-filter="DOWN">Down</button>
+                    <button class="filter-btn bg-surface-container-highest text-on-surface-variant hover:bg-yellow-400/20 hover:text-yellow-400 font-bold px-3 py-1 rounded-full text-[10px] uppercase border border-outline-variant/50" data-filter="WARNING">Warning</button>
+                    <button class="filter-btn bg-surface-container-highest text-on-surface-variant hover:bg-gray-400/20 hover:text-gray-400 font-bold px-3 py-1 rounded-full text-[10px] uppercase border border-outline-variant/50" data-filter="UNKNOWN">Unknown</button>
+                    <button class="filter-btn bg-surface-container-highest text-on-surface-variant hover:bg-blue-400/20 hover:text-blue-400 font-bold px-3 py-1 rounded-full text-[10px] uppercase border border-outline-variant/50" data-filter="ALL">Todas</button>
+                </div>
+            </div>
+            <div class="relative flex-1 w-full flex items-center justify-center min-h-[200px]">
+                <canvas id="donutChart"></canvas>
+            </div>
+
+            <!-- Overall Totals Bar Chart -->
+            <div class="mt-4 border-t border-outline-variant/20 pt-4 h-[280px] flex flex-col">
+                <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Desglose Total de Severidad</h4>
+                <div class="relative flex-1 w-full">
+                    <canvas id="barChartSeverities"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOP 10 Dispositivos Críticos (Pie Chart + Table) -->
+        <div class="lg:col-span-8 glass-panel p-6 rounded-xl border border-outline-variant/10 flex flex-col h-[750px]">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-xl font-bold font-headline text-white" id="rightChartTitle">TOP 10 Dispositivos (CRITICAL)</h3>
+            </div>
+            <p class="text-xs text-on-surface-variant mb-6 border-b border-white/5 pb-4">Análisis detallado de los 10 objetos con la mayor recurrencia de alertas en el periodo actual. Orden descendente.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-full pb-4">
+
+                <!-- Pie Chart -->
+                <div class="w-full h-full min-h-[300px] flex items-center justify-center relative">
+                    <canvas id="top10Chart"></canvas>
+                </div>
+
+                <!-- Data Table -->
+                <div class="overflow-y-auto h-full max-h-[330px] custom-scrollbar pr-3">
+                    <table class="w-full text-sm text-left text-on-surface-variant">
+                        <thead class="text-[10px] text-primary uppercase bg-surface-container-highest/80 sticky top-0 backdrop-blur-md z-10">
+                            <tr>
+                                <th scope="col" class="px-4 py-3 rounded-tl-lg">Object Name</th>
+                                <th scope="col" class="px-4 py-3 text-right rounded-tr-lg">Cuenta (Alertas)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top10Body" class="divide-y divide-outline-variant/10">
+                        </tbody>
+                        <tfoot class="sticky bottom-0 bg-primary/10 backdrop-blur-md font-bold text-white border-t border-primary/20">
+                            <tr>
+                                <td class="px-4 py-4 rounded-bl-lg text-primary">Total General (Top 10)</td>
+                                <td class="px-4 py-4 text-right text-primary text-glow-primary rounded-br-lg text-lg" id="tableTotalCount">0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Search Section -->
+    <div class="mt-8 glass-panel p-6 rounded-xl border border-outline-variant/20" id="searchSection">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="material-symbols-outlined text-tertiary text-2xl">manage_search</span>
+            <h3 class="text-xl font-bold font-headline text-white">Buscar Alerta</h3>
+            <span class="ml-auto text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Búsqueda Global en el Informe</span>
+        </div>
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <span class="material-symbols-outlined text-outline-variant text-[20px]">search</span>
+            </div>
+            <input type="text" id="alertSearchInput" placeholder="Buscar por dispositivo, servicio, estado, fecha, datos..."
+                class="w-full bg-surface-container-high border border-outline-variant/30 text-white rounded-xl pl-12 pr-12 py-3.5 outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all placeholder:text-outline-variant font-body text-sm" />
+            <button id="clearSearch" class="absolute inset-y-0 right-0 pr-4 flex items-center hidden">
+                <span class="material-symbols-outlined text-outline-variant hover:text-white transition-colors cursor-pointer">close</span>
+            </button>
+        </div>
+
+        <div id="searchResults" class="hidden mt-5">
+            <div class="flex items-center justify-between mb-3 border-b border-outline-variant/10 pb-3">
+                <p class="text-xs text-on-surface-variant flex items-center gap-2">
+                    <span class="material-symbols-outlined text-tertiary text-[16px]">info</span>
+                    <span id="searchResultCount" class="font-bold text-white">0</span> resultados encontrados
+                </p>
+                <span id="searchLimitWarning" class="hidden text-[10px] text-yellow-400/70 font-bold uppercase tracking-widest">Mostrando primeros 300 — refina la búsqueda</span>
+            </div>
+            <div class="overflow-y-auto max-h-[420px] custom-scrollbar pr-1">
+                <table class="w-full text-sm text-left text-on-surface-variant">
+                    <thead class="text-[10px] text-primary uppercase bg-surface-container-highest/80 sticky top-0 backdrop-blur-md z-10">
+                        <tr>
+                            <th class="px-4 py-3 rounded-tl-lg">#</th>
+                            <th class="px-4 py-3">Dispositivo</th>
+                            <th class="px-4 py-3">Fecha / Time</th>
+                            <th class="px-4 py-3">Servicio</th>
+                            <th class="px-4 py-3 w-1/3">Información / Data</th>
+                            <th class="px-4 py-3 text-right rounded-tr-lg">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="searchResultsBody" class="divide-y divide-outline-variant/10"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drill-down Details Table -->
+    <div class="mt-8 glass-panel p-6 rounded-xl border border-primary/20 flex flex-col h-[600px] shadow-[0_0_30px_rgba(75,142,255,0.05)] transition-all" id="drilldownSection">
+        <div class="flex items-center gap-3 mb-2">
+            <span class="material-symbols-outlined text-primary text-2xl">list_alt</span>
+            <h3 class="text-xl font-bold font-headline text-white" id="lblBreakdownTitle">Desglose Detallado de Alertas</h3>
+        </div>
+        <p class="text-xs text-on-surface-variant mb-6 border-b border-white/5 pb-4" id="lblBreakdownDesc">Selecciona una porción en cualquiera de los gráficos superiores para cargar el historial granular de alertas para ese dispositivo.</p>
+
+        <div class="overflow-y-auto flex-1 custom-scrollbar pr-3">
+            <table class="w-full text-sm text-left text-on-surface-variant">
+                <thead class="text-[10px] text-primary uppercase bg-surface-container-highest/80 sticky top-0 backdrop-blur-md z-10" id="drilldownHeader">
+                    <tr>
+                        <th class="px-4 py-3 rounded-tl-lg">#</th>
+                        <th class="px-4 py-3">Fecha / Time</th>
+                        <th class="px-4 py-3">Servicio</th>
+                        <th class="px-4 py-3 w-1/3">Información / Data</th>
+                        <th class="px-4 py-3 text-right rounded-tr-lg">% Total</th>
+                    </tr>
+                </thead>
+                <tbody id="drilldownBody" class="divide-y divide-outline-variant/10">
+                    <tr><td colspan="5" class="text-center py-10 opacity-50"><span class="material-symbols-outlined text-4xl mb-4 block">touch_app</span>Haz clic en un gráfico para cargar los detalles</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script src="alertas-dashboard.js"></script>
+</body>
+</html>

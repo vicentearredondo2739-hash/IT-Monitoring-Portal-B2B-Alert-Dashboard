@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Acceso Clientes | Orion Managed Services</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<!-- Reusing core theme shared with the rest of the portal -->
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+    extend: {
+        colors: {
+        "on-surface-variant": "#c1c6d7",
+        "surface-container-highest": "#353436",
+        "primary-container": "#4b8eff",
+        "on-surface": "#e5e2e3",
+        "surface-container-lowest": "#0e0e0f",
+        "tertiary": "#00dbe9",
+        "secondary-container": "#2ff801",
+        "surface-container-low": "#1c1b1c",
+        "secondary": "#d7ffc5",
+        "outline-variant": "#414755",
+        "primary": "#adc6ff",
+        "surface-container": "#201f20",
+        "background": "#131314",
+        "surface-container-high": "#2a2a2b",
+        },
+        fontFamily: {
+        "headline": ["Space Grotesk"],
+        "body": ["Inter"],
+        },
+    },
+    },
+}
+</script>
+<style>
+.glass-panel {
+    background: rgba(28, 27, 28, 0.4);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+.text-glow-primary { text-shadow: 0 0 15px rgba(173, 198, 255, 0.4); }
+</style>
+<link href="main.css" rel="stylesheet"/>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30 min-h-screen flex items-center justify-center relative overflow-hidden">
+
+<!-- Decorative Background Effect -->
+<div class="absolute inset-0 z-0 opacity-30">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(173,198,255,0.15),transparent_50%)]"></div>
+</div>
+
+<main class="w-full max-w-md relative z-10 px-6">
+    <div class="text-center mb-8 flex flex-col items-center">
+        <img src="company-logo.png" alt="Orion Managed Services" class="h-16 mb-4 opacity-90">
+        <p class="text-on-surface-variant text-sm">Portal Privado de Monitoreo B2B</p>
+    </div>
+
+    <div class="glass-panel p-8 rounded-2xl border border-outline-variant/20 flex flex-col">
+        <form id="loginForm" class="space-y-6">
+            <!-- Email -->
+            <div>
+                <label for="email" class="block text-[10px] uppercase tracking-widest font-bold text-on-surface-variant mb-2">Usuario o Correo Electrónico</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="material-symbols-outlined text-outline-variant text-[20px]">person</span>
+                    </div>
+                    <input type="text" id="email" required placeholder="usuario o correo@empresa.com"
+                        class="bg-surface-container-high border border-outline-variant/30 text-white rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-3 outline-none transition-all placeholder:text-outline-variant">
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label for="password" class="block text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Contraseña de Bóveda</label>
+                </div>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="material-symbols-outlined text-outline-variant text-[20px]">lock</span>
+                    </div>
+                    <input type="password" id="password" required placeholder="••••••••"
+                        class="bg-surface-container-high border border-outline-variant/30 text-white rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-3 outline-none transition-all placeholder:text-outline-variant">
+                </div>
+            </div>
+
+            <!-- CAPTCHA -->
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest font-bold text-on-surface-variant mb-2">
+                    <span class="material-symbols-outlined text-xs align-middle mr-1">security</span> Verificación de Seguridad
+                </label>
+                <div class="bg-surface-container-high border border-outline-variant/30 rounded-lg px-4 py-3 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-outline-variant text-[16px]">calculate</span>
+                    <span class="text-white font-mono font-bold text-lg tracking-widest select-none" id="captchaQuestion">...</span>
+                    <span class="text-on-surface-variant font-bold">=</span>
+                    <input type="number" id="captchaAnswer" placeholder="?" autocomplete="off"
+                        class="w-20 bg-surface-container-lowest border border-outline-variant/30 text-white rounded-lg p-2 outline-none text-sm text-center font-mono font-bold focus:border-primary/60 transition-all placeholder:text-outline-variant [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                    <button type="button" id="refreshCaptcha" title="Nueva pregunta" class="ml-auto text-outline-variant hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Message Box -->
+            <div id="errorMsg" class="hidden bg-red-900/20 border border-red-500/30 text-[#ffb4ab] text-xs p-3 rounded-lg flex items-center gap-2">
+                <span class="material-symbols-outlined text-[16px]">error</span>
+                <span>Credenciales incorrectas o acceso denegado.</span>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-primary to-primary-container text-[#002e69] hover:from-white hover:to-primary hover:text-[#001a41] font-bold rounded-lg px-5 py-3.5 text-sm uppercase tracking-wider transition-all flex justify-center items-center gap-2 group shadow-[0_0_15px_rgba(173,198,255,0.2)] hover:shadow-[0_0_25px_rgba(173,198,255,0.4)]">
+                <span>Establecer Enlace</span>
+                <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">login</span>
+            </button>
+        </form>
+
+        <div class="mt-8 text-center border-t border-outline-variant/10 pt-6">
+            <p class="text-[10px] text-on-surface-variant font-medium tracking-tighter uppercase">© 2025 Orion Managed Services.</p>
+            <p class="text-[10px] text-slate-600 font-medium tracking-tighter uppercase mt-1">Infraestructura Crítica Asegurada.</p>
+        </div>
+    </div>
+</main>
+
+<script src="login.js"></script>
+</body>
+</html>
