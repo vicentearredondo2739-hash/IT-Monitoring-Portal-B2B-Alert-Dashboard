@@ -7,7 +7,9 @@
 > Built for environments using Centreon as the monitoring engine.
 
 ## Screenshots
->
+<img width="1811" height="975" alt="image" src="https://github.com/user-attachments/assets/06f92188-3e37-4569-b4ef-55b7d575f7c8" />
+
+
 
 ## Features
 - Role-based login (admin / client) with math CAPTCHA
