@@ -1,6 +1,29 @@
 # IT-Monitoring-Portal-B2B-Alert-Dashboard
 > Real-time infrastructure alert reporting system built for multi-tenant B2B monitoring environments.
 >
+> IT-Monitoring-Portal-B2B-Alert-Dashboard/
+├── README.md
+├── .htaccess
+├── .gitignore
+├── frontend/
+│   ├── admin.html
+│   ├── admin.js
+│   ├── alertas-dashboard.html
+│   ├── alertas-dashboard.js
+│   ├── login.html
+│   └── login.js
+├── api/
+│   ├── config.php
+│   ├── login.php
+│   ├── logout.php
+│   ├── create_user.php
+│   ├── delete_report.php
+│   ├── get_all_reports.php
+│   ├── get_report.php
+│   ├── list_clients.php
+│   └── append_devices.php
+└── database/
+    └── migration_speed.sql
 # 🔍 IT Monitoring Portal
 
 > Multi-tenant B2B alert dashboard for IT infrastructure monitoring. 
